@@ -1,4 +1,6 @@
 GET http://localhost:5000/users
+Authorization: Bearer 
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsIm5hbWUiOiJhcmkiLCJlbWFpbCI6ImFyaUBnbWFpbC5jb20iLCJpYXQiOjE2NTY0MDYzMTEsImV4cCI6MTY1NjQwNjMzMX0._UBERFw4HBkcuvnfRHU98WdoGt5CUU5WXXsRA_el0IQ
 
 ###
 POST http://localhost:5000/users
@@ -9,4 +11,13 @@ Content-Type: application/json
     "email": "ari@gmail.com",
     "password": "12345",
     "confPassword": "12345"
+}
+
+###
+POST http://localhost:5000/login
+Content-Type: application/json
+
+{
+    "email": "ari@gmail.com",
+    "password": "12345"
 }

@@ -1,5 +1,6 @@
 import Users from "../models/UserModel.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 export const getUsers = async(req, res) => {
     try {
@@ -26,5 +27,40 @@ export const regUsers = async(req, res) => {
         res.json({msg: "Register is succsessfully"})
     } catch (error) {
         console.log(error)
+    }
+}
+
+export const login = async(req, res) => {
+    try {
+        const user = await Users.findAll({
+            where: {
+                email: req.body.email
+            }
+        });
+        const match = await bcrypt.compare(req.body.password, user[0].password);
+        if(!match) return res.status(400).json({msg: "Wrong password!!!"});
+        const userId = user[0].id;
+        const name = user[0].name;
+        const email = user[0].email;
+        const accesstoken = jwt.sign({userId, name,email}, process.env.ACCESS_TOKEN_SECRET,{
+            expiresIn: '20s'
+        });
+        const refreshtoken = jwt.sign({userId, name, email}, process.env.REFRESH_TOKEN_SECRET,{
+            expiresIn: '1d'
+        });
+        await Users.update({refresh_token: refreshtoken},{
+            where: {
+                id: userId
+            }
+        });
+        res.cookie('refreshtoken', refreshtoken, {
+            httpOnly: true, // agar tidak bisa diakses melalui javascript
+            maxAge: 24 * 60 * 60 * 1000
+            // jika menggunakan https maka gunakan secure
+            // secure: true
+        });
+        res.json({accesstoken});
+    } catch (error) {
+        return res.status(400).json({msg: "Email not found"});
     }
 }
