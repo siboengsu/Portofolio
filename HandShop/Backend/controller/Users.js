@@ -47,15 +47,15 @@ export const login = async(req, res) => {
         const accesstoken = jwt.sign({userId, name,email}, process.env.ACCESS_TOKEN_SECRET,{
             expiresIn: '20s'
         });
-        const refreshtoken = jwt.sign({userId, name, email}, process.env.REFRESH_TOKEN_SECRET,{
+        const refreshToken = jwt.sign({userId, name, email}, process.env.REFRESH_TOKEN_SECRET,{
             expiresIn: '1d'
         });
-        await Users.update({refresh_token: refreshtoken},{
+        await Users.update({refresh_token: refreshToken},{
             where: {
                 id: userId
             }
         });
-        res.cookie('refreshtoken', refreshtoken, {
+        res.cookie('refreshToken', refreshToken, {
             httpOnly: true, // agar tidak bisa diakses melalui javascript
             maxAge: 24 * 60 * 60 * 1000
             // jika menggunakan https maka gunakan secure
@@ -65,4 +65,20 @@ export const login = async(req, res) => {
     } catch (error) {
         return res.status(400).json({msg: "Email not found"});
     }
+}
+
+export const logout = async(req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+    if(!refreshToken) return res.sendStatus(204);
+    const user = await Users.findAll({
+        refresh_token: refreshToken
+    });
+    if(!user[0]) return res.sendStatus(403);
+    const userId = user[0].id;
+    await Users.update(
+        { refresh_token: null },
+        { where: { id: userId } }
+    )
+    res.clearCookie('refreshToken');
+    return res.sendStatus(200);
 }
